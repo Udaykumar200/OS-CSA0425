@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <pthread.h>
+
+pthread_mutex_t mutex;
+pthread_cond_t cond;
+
+void* printEven(void* arg)
+{
+    int* limit = (int*)arg;
+    int i;
+
+    for (i = 2; i <= *limit; i += 2) {
+        pthread_mutex_lock(&mutex);
+        while (i % 2 != 0) {
+            pthread_cond_wait(&cond, &mutex);
+        }
+        printf("%d ", i);
+        pthread_cond_signal(&cond);
+        pthread_mutex_unlock(&mutex);
+    }
+
+    return NULL;
+}
+
+void* printOdd(void* arg)
+{
+    int* limit = (int*)arg;
+    int i;
+
+    for (i = 1; i <= *limit; i += 2) {
+        pthread_mutex_lock(&mutex);
+        while (i % 2 != 1) {
+            pthread_cond_wait(&cond, &mutex);
+        }
+        printf("%d ", i);
+        pthread_cond_signal(&cond);
+        pthread_mutex_unlock(&mutex);
+    }
+
+    return NULL;
+}
+
+int main()
+{
+    int limit;
+
+    printf("Enter the limit: ");
+    scanf("%d", &limit);
+
+    pthread_t evenThread, oddThread;
+    pthread_mutex_init(&mutex, NULL);
+    pthread_cond_init(&cond, NULL);
+
+    pthread_create(&evenThread, NULL, printEven, &limit);
+    pthread_create(&oddThread, NULL, printOdd, &limit);
+
+    pthread_join(evenThread, NULL);
+    pthread_join(oddThread, NULL);
+
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&cond);
+
+    return 0;
+}
+n
